@@ -1,14 +1,26 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from blog.models import Comment, Post
-from blog.forms import PostForm, CommentForm
+from blog.forms import PostForm, CommentForm, UserForm
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import (TemplateView, ListView,
-                                    DetailView, CreateView,
-                                    UpdateView, DeleteView)
+from django.views.generic.base import TemplateView
+from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
+from django.views.generic.edit import (FormView, CreateView, UpdateView, DeleteView)
 # Create your views here.
+
+class SignUpView(FormView):
+    form_class = UserForm
+    template_name = 'signup.html'
+    success_url = '/accounts/login/'
+
+    def form_valid(self, form):
+        user = form.save()
+        user.set_password(user.password)
+        user.save()
+        return redirect(self.get_success_url())
 
 class AboutView(TemplateView):
     template_name = 'about.html'
@@ -75,7 +87,6 @@ def add_comment_to_post(request, pk):
             return redirect('post_detail', pk=post.pk)
     else:
         form = CommentForm()
-
     return render(request, 'blog/comment_form.html', {'form': form})
 
 
